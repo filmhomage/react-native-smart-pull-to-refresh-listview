@@ -12,7 +12,6 @@ import PropTypes from 'prop-types';
 import {
     View,
     ScrollView,
-    FlatList,
     StyleSheet,
     Text,
     Platform,
@@ -68,9 +67,6 @@ class PullToRefreshListView extends Component {
         enabledPullDown: true,
         autoLoadMore: false,
         scrollEventThrottle: 16,
-        dataSource: new FlatList.DataSource({
-            rowHasChanged: (r1, r2) => r1 !== r2,
-        }),
         renderRow: () => null,
         renderScrollComponent: props => <ScrollView {...props}/>,
         onEndReachedThreshold: StyleSheet.hairlineWidth,    //0,
@@ -81,11 +77,9 @@ class PullToRefreshListView extends Component {
     }
 
     static propTypes = {
-        ...FlatList.propTypes,
         listItemProps: PropTypes.shape(View.propTypes),
         viewType: PropTypes.oneOf([
             viewType.scrollView,
-            viewType.listView,
         ]),
         pullUpDistance: PropTypes.number,
         pullUpStayDistance: PropTypes.number,
@@ -102,21 +96,6 @@ class PullToRefreshListView extends Component {
         super(props)
         this.state = {}
         let {refresh_none, load_more_none} = viewState
-
-        if (props.autoLoadMore && props.viewType == viewType.listView) {
-            this._onEndReached = () => {
-                let { refreshing, load_more_none, loading_more,} = viewState
-                //if (this._refreshState != refreshing && this._loadMoreState == load_more_none) {
-                if (this._canLoadMore && this._refreshState != refreshing && this._loadMoreState == load_more_none) {
-                    this._loadMoreState = loading_more
-                    this._footer.setState({
-                        pullState: this._loadMoreState,
-                    })
-
-                    props.onLoadMore && props.onLoadMore()
-                }
-            }
-        }
 
         /**
          * (occurs on react-native 0.32, and maybe also occurs on other versions)ListView renderHeader/renderFooter => View's children cannot be visible when parent's height < StyleSheet.hairlineWidth
@@ -165,48 +144,8 @@ class PullToRefreshListView extends Component {
                     {this.props.children}
                     {this._renderFooter()}
                 </ScrollView> :
-                <FlatList
-                    ref={ component => this._scrollView = component }
-                    {...this.props}
-                    style={[this.props.style, styles.paddingVertical,]}
-                    contentContainerStyle={[this.props.contentContainerStyle, styles.marginVertical,]}
-                    onEndReached={this._onEndReached}
-                    onLayout={this._onLayout}
-                    onContentSizeChange={this._onContentSizeChange}
-                    onResponderGrant={this._onResponderGrant}
-                    onScroll={this._onScroll}
-                    onMomentumScrollBegin={this._onResponderRelease}
-                    onChangeVisibleRows={this._onChangeVisibleRows}
-                    listItemProps={this.props.listItemProps}
-                    renderRow={this._renderRow}
-                    renderHeader={this._renderHeader}
-                    renderFooter={this._renderFooter}
-                    renderScrollComponent={ props => <ScrollView ref={ (component) => this._innerScrollView = component } {...props} /> }/>
-
+                <View></View>
         )
-    }
-
-    componentDidMount () {
-        /**
-         * (occurs on react-native 0.32, and maybe also occurs on react-native 0.30+)ListView renderHeader/renderFooter => View's children cannot be visible when parent's height < StyleSheet.hairlineWidth
-         * ScrollView does not exist this strange bug
-         */
-        if (this.props.viewType == viewType.listView) {
-            this._header.setNativeProps({
-                style: {
-                    height: this._fixedBoundary
-                }
-            })
-            this._headerHeight = this._fixedBoundary
-
-            if (!this.props.autoLoadMore) {
-                this._footer.setNativeProps({
-                    style: {
-                        height: this._fixedBoundary
-                    }
-                })
-            }
-        }
     }
 
     setNativeProps = (props) => {
