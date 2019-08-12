@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
 import {
     View,
     ScrollView,
-    ListView,
+    FlatList,
     StyleSheet,
     Text,
     Platform,
@@ -68,7 +68,7 @@ class PullToRefreshListView extends Component {
         enabledPullDown: true,
         autoLoadMore: false,
         scrollEventThrottle: 16,
-        dataSource: new ListView.DataSource({
+        dataSource: new FlatList.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2,
         }),
         renderRow: () => null,
@@ -81,7 +81,7 @@ class PullToRefreshListView extends Component {
     }
 
     static propTypes = {
-        ...ListView.propTypes,
+        ...FlatList.propTypes,
         listItemProps: PropTypes.shape(View.propTypes),
         viewType: PropTypes.oneOf([
             viewType.scrollView,
@@ -165,7 +165,7 @@ class PullToRefreshListView extends Component {
                     {this.props.children}
                     {this._renderFooter()}
                 </ScrollView> :
-                <ListView
+                <FlatList
                     ref={ component => this._scrollView = component }
                     {...this.props}
                     style={[this.props.style, styles.paddingVertical,]}
